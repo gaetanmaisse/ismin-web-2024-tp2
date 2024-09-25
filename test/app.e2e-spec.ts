@@ -1,4 +1,4 @@
-import type { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
 import type supertest from 'supertest';
@@ -14,6 +14,7 @@ describe('Books API', () => {
     }).compile();
 
     app = moduleRef.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe());
     await app.init();
 
     httpRequester = request(app.getHttpServer());
@@ -41,6 +42,27 @@ describe('Books API', () => {
       title: 'Candide',
       author: 'Voltaire',
       date: '1759',
+    });
+  });
+
+  it('POST /books with wrong data should throw an error', async () => {
+    const response = await httpRequester
+      .post('/books')
+      .send({
+        isbn: '978-2081510436',
+        title: 'Candide',
+        author: true,
+        date: 'az',
+      })
+      .expect(400);
+
+    expect(response.body).toEqual({
+      error: 'Bad Request',
+      message: [
+        'author must be a string',
+        'date must be a valid ISO 8601 date string',
+      ],
+      statusCode: 400,
     });
   });
 

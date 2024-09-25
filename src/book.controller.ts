@@ -9,6 +9,7 @@ import {
   Query,
 } from '@nestjs/common';
 import type { Book } from './Book';
+import { BookDto } from './Book.dto';
 import { BookService } from './book.service';
 
 @Controller('/books')
@@ -16,9 +17,14 @@ export class BookController {
   constructor(private readonly bookService: BookService) {}
 
   @Post()
-  createBook(@Body() book: Book): Book {
-    this.bookService.addBook(book);
-    return this.bookService.getBook(book.isbn);
+  createBook(@Body() bookDto: BookDto): Book {
+    this.bookService.addBook({
+      isbn: bookDto.isbn,
+      author: bookDto.author,
+      title: bookDto.title,
+      date: bookDto.date,
+    });
+    return this.bookService.getBook(bookDto.isbn);
   }
 
   @Get()
